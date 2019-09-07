@@ -1,0 +1,5 @@
+#!/bin/bash
+# ReactOS Web-Playground BuildBot Build Scripts
+# build - Build the entire website using Hugo (without minification for debugging purposes)
+
+hugo
