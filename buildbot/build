@@ -15,6 +15,6 @@ branch=$1
 
 
 subdomain=`get_subdomain ${branch}`
-sed -i 's#baseURL = ".*"#baseURL = "https://${subdomain}.web-content.reactos.org"#' config.toml
+sed -i "s#baseURL = \".*\"#baseURL = \"https://${subdomain}.web-content.reactos.org\"#" config.toml
 
 hugo
