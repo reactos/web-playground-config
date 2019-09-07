@@ -3,7 +3,8 @@
 # build - Build the entire website using Hugo (without minification for debugging purposes)
 #
 # Parameter $1 - Branch we're building.
-source functions
+SCRIPTROOT=`dirname $0`
+source ${SCRIPTROOT}/functions
 
 if [[ "$1" == "" ]]; then
 	echo "Please specify the branch!"

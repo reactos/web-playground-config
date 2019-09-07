@@ -4,7 +4,8 @@
 #
 # Parameter $1 - Branch we're building.
 # Parameter $2 - Author of the changes. This is guaranteed to be a GitHub username if (and only if!) we built a PR.
-source functions
+SCRIPTROOT=`dirname $0`
+source ${SCRIPTROOT}/functions
 
 if [[ "$2" == "" ]]; then
 	echo "Please specify the branch and author!"
