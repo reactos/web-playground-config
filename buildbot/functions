@@ -1,0 +1,28 @@
+# ReactOS Web-Playground BuildBot Build Scripts
+# functions - Shared functions between all scripts
+
+# Returns 0 (true) if the given GitHub username belongs to the given GitHub Team ID, otherwise returns 1 (false).
+check_team_membership() {
+	local member=$1
+	local team_id=$2
+
+	local status=`curl -H "Authorization: token ${personal_access_token}" -i -s https://api.github.com/teams/${team_id}/memberships/${member} | head -n 1 | cut -d$' ' -f2`
+	if [[ "${status}" == "200" ]]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# Outputs the *.web-content.reactos.org subdomain for deployment, or "invalid" if this branch is not deployed.
+get_subdomain() {
+	local branch=$1
+
+	if [[ "${branch}" == "master" ]]; then
+		echo "master"
+	elif [[ "${branch}" =~ ^refs/pull/([0-9]+)/ ]]; then
+		echo "pr${BASH_REMATCH[1]}"
+	else
+		echo "invalid"
+	fi
+}

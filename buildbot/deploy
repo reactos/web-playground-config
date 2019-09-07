@@ -2,30 +2,9 @@
 # ReactOS Web-Playground BuildBot Build Scripts
 # deploy - Make the built website available at a subdomain of *.web-content.reactos.org if the commit author is trusted
 #
-# Parameter $1 - Branch that has been built.
+# Parameter $1 - Branch we're building.
 # Parameter $2 - Author of the changes. This is guaranteed to be a GitHub username if (and only if!) we built a PR.
-
-#######################################
-# FUNCTIONS
-#######################################
-
-# Returns 0 (true) if the given GitHub username belongs to the given GitHub Team ID, otherwise returns 1 (false).
-check_team_membership() {
-	local member=$1
-	local team_id=$2
-
-	local status=`curl -H "Authorization: token ${personal_access_token}" -i -s https://api.github.com/teams/${team_id}/memberships/${member} | head -n 1 | cut -d$' ' -f2`
-	if [[ "${status}" == "200" ]]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
-
-#######################################
-# ENTRY POINT
-#######################################
+source functions
 
 if [[ "$2" == "" ]]; then
 	echo "Please specify the branch and author!"
@@ -47,11 +26,8 @@ trusted_group_id=3404185            # "Trusted Web-Playground Users"
 # What branch are we building?
 if [[ "${branch}" == "master" ]]; then
 	# A push to master is only possible by the developer team, so we don't have to check any team memberships.
-	subdomain="master"
-elif [[ "${branch}" =~ ^refs/pull/([0-9]+)/ ]]; then
+elif [[ "${branch}" == refs/pull/* ]]; then
 	# Everyone can open a Pull Request against our repository, but we cannot trust everyone to not abuse this system and use it to set up a malicious/spam website.
-	subdomain="pr${BASH_REMATCH[1]}"
-
 	# Check if the author is either part of the developer team or the additional group of trusted people.
 	if ! { check_team_membership ${author} ${developer_group_id} || check_team_membership ${author} ${trusted_group_id} }; then
 		echo "This script would usually deploy the build result of your Pull Request to https://${subdomain}.web-content.reactos.org"
@@ -67,6 +43,7 @@ fi
 
 
 # The author is trusted, so move over the built files to deploy the website.
+subdomain=`get_subdomain ${branch}`
 target="/srv/www/web-content/${subdomain}"
 rm -rf ${target}
 mv public ${target} || exit 1

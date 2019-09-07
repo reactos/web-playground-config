@@ -1,5 +1,19 @@
 #!/bin/bash
 # ReactOS Web-Playground BuildBot Build Scripts
 # build - Build the entire website using Hugo (without minification for debugging purposes)
+#
+# Parameter $1 - Branch we're building.
+source functions
+
+if [[ "$1" == "" ]]; then
+	echo "Please specify the branch!"
+	exit 1
+fi
+
+branch=$1
+
+
+subdomain=`get_subdomain ${branch}`
+sed -i 's#baseURL = ".*"#baseURL = "https://${subdomain}.web-content.reactos.org"#' config.toml
 
 hugo
