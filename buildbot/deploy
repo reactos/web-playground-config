@@ -3,34 +3,40 @@
 # deploy - Make the built website available at a subdomain of *.web-content.reactos.org if the commit author is trusted
 #
 # Parameter $1 - Branch we're building.
-# Parameter $2 - Author of the changes. This is guaranteed to be a GitHub username if (and only if!) we built a PR.
 SCRIPTROOT=`dirname $0`
 source ${SCRIPTROOT}/functions
 
-if [[ "$2" == "" ]]; then
-	echo "Please specify the branch and author!"
+if [[ "$1" == "" ]]; then
+	echo "Please specify the branch!"
 	exit 1
 fi
 
 branch=$1
-author=$2
 
 # Read secret configuration from credentials.ini.
 # Doesn't take INI sections into account, but sufficient for our use case.
-source <(grep personal_access_token credentials.ini)
+source <(grep personal_access_token ${SCRIPTROOT}/credentials.ini)
 
 # These IDs are no secret and can be retrieved by an API call to https://api.github.com/orgs/reactos/teams
 developer_group_id=2505522          # "ReactOS Developer Team"
 trusted_group_id=3404185            # "Trusted Web-Playground Users"
 
 
+subdomain=`get_subdomain ${branch}`
+
 # What branch are we building?
 if [[ "${branch}" == "master" ]]; then
 	# A push to master is only possible by the developer team, so we don't have to check any team memberships.
-elif [[ "${branch}" == refs/pull/* ]]; then
+	:
+elif [[ "${branch}" =~ ^refs/pull/([0-9]+)/ ]]; then
 	# Everyone can open a Pull Request against our repository, but we cannot trust everyone to not abuse this system and use it to set up a malicious/spam website.
-	# Check if the author is either part of the developer team or the additional group of trusted people.
-	if ! { check_team_membership ${author} ${developer_group_id} || check_team_membership ${author} ${trusted_group_id} }; then
+
+	# First get the GitHub username of the Pull Request author.
+	pr=${BASH_REMATCH[1]}
+	username=`curl -s https://api.github.com/repos/reactos/web-content/pulls/${pr} | jq -r '.user.login'`
+
+	# Check if this user is either part of the developer team or the additional group of trusted people.
+	if ! { check_team_membership ${username} ${developer_group_id} || check_team_membership ${username} ${trusted_group_id}; }; then
 		echo "This script would usually deploy the build result of your Pull Request to https://${subdomain}.web-content.reactos.org"
 		echo "However, to prevent abuse, your GitHub account first needs to be added to the trusted user list."
 		echo "Ask someone from the developer team if you need this deployment feature and want to be added to the trusted user list."
@@ -44,7 +50,6 @@ fi
 
 
 # The author is trusted, so move over the built files to deploy the website.
-subdomain=`get_subdomain ${branch}`
 target="/srv/www/web-content/${subdomain}"
 rm -rf ${target}
 mv public ${target} || exit 1
