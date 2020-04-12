@@ -14,6 +14,13 @@ check_team_membership() {
 	fi
 }
 
+# Get the GitHub username for the person that submitted a web-content Pull Request
+get_pr_username() {
+	local pr_number=$1
+
+	curl -s https://api.github.com/repos/reactos/web-content/pulls/${pr_number} | jq -r '.user.login'
+}
+
 # Outputs the *.web-content.reactos.org subdomain for deployment, or "invalid" if this branch is not deployed.
 get_subdomain() {
 	local branch=$1
@@ -25,4 +32,12 @@ get_subdomain() {
 	else
 		echo "invalid"
 	fi
+}
+
+# Posts a message from "reactos-buildbot" to a web-content Pull Request discussion.
+post_to_pr() {
+	local pr_number=$1
+	local message=$2
+
+	curl -d '{"body": "'"$message"'"}' -H "Authorization: token ${personal_access_token}" -s -X POST https://api.github.com/repos/reactos/web-content/issues/${pr_number}/comments
 }
