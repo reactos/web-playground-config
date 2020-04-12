@@ -39,5 +39,5 @@ post_to_pr() {
 	local pr_number=$1
 	local message=$2
 
-	curl -d '{"body": "'"$message"'"}' -H "Authorization: token ${personal_access_token}" -s -X POST https://api.github.com/repos/reactos/web-content/issues/${pr_number}/comments
+	curl -d '{"body": "'"$message"'"}' -H "Authorization: token ${personal_access_token}" -s -X POST https://api.github.com/repos/reactos/web-content/issues/${pr_number}/comments > /dev/null
 }

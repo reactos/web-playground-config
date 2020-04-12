@@ -22,11 +22,12 @@ developer_group_id=2505522          # "ReactOS Developer Team"
 trusted_group_id=3404185            # "Trusted Web-Playground Users"
 
 
-pr_message="Thanks for your contribution!\\n\
-I have built and deployed your changes to ${target_url} and will also do that for your future changes."
 subdomain=`get_subdomain ${branch}`
 target_directory="/srv/www/web-content/${subdomain}"
 target_url="https://${subdomain}.web-content.reactos.org"
+
+pr_message="Thanks for your contribution!\\n\
+I have built and deployed your changes to ${target_url} and will also do that for your future changes."
 
 # What branch are we building?
 if [[ "${branch}" == "master" ]]; then
