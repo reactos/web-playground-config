@@ -14,11 +14,34 @@ check_team_membership() {
 	fi
 }
 
+check_pr_label() {
+	local labels="$1"
+	local search_label="$2"
+
+	if echo "$labels" | grep -qFx "$search_label"; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 # Get the GitHub username for the person that submitted a web-content Pull Request
 get_pr_username() {
+	local pr_data="$1"
+
+	echo "$pr_data" | jq -r '.user.login'
+}
+
+get_pr_labels() {
+	local pr_data="$1"
+
+	echo "$pr_data" | jq -r '.labels[].name'
+}
+
+get_pr_data() {
 	local pr_number=$1
 
-	curl -s https://api.github.com/repos/reactos/web-content/pulls/${pr_number} | jq -r '.user.login'
+	curl -s https://api.github.com/repos/reactos/web-content/pulls/${pr_number}
 }
 
 # Outputs the *.web-content.reactos.org subdomain for deployment, or "invalid" if this branch is not deployed.

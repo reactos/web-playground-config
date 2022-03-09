@@ -20,6 +20,7 @@ source <(grep personal_access_token ${SCRIPTROOT}/credentials.ini)
 # These IDs are no secret and can be retrieved by an API call to https://api.github.com/orgs/reactos/teams
 developer_group_id=2505522          # "ReactOS Developer Team"
 trusted_group_id=3404185            # "Trusted Web-Playground Users"
+deploy_label=deploy-pr
 
 
 subdomain=`get_subdomain ${branch}`
@@ -38,13 +39,16 @@ elif [[ "${branch}" =~ ^refs/pull/([0-9]+)/ ]]; then
 
 	# First get the GitHub username of the Pull Request author.
 	pr_number=${BASH_REMATCH[1]}
-	username=`get_pr_username ${pr_number}`
+	pr_data=`get_pr_data ${pr_number}`
+	username=`get_pr_username "${pr_data}"`
+	labels=`get_pr_labels "${pr_data}"`
 
 	# Check if this user is either part of the developer team or the additional group of trusted people.
-	if ! { check_team_membership ${username} ${developer_group_id} || check_team_membership ${username} ${trusted_group_id}; }; then
+	if ! { check_team_membership ${username} ${developer_group_id} || check_team_membership ${username} ${trusted_group_id} || check_pr_label "${labels}" ${deploy_label}; }; then
 		echo "This script would usually deploy the build result of your Pull Request to ${target_url}"
 		echo "However, to prevent abuse, your GitHub account first needs to be added to the trusted user list."
-		echo "Ask someone from the developer team if you need this deployment feature and want to be added to the trusted user list."
+		echo "If you want to make use of this feature, ask someone from the developer team to add the 'deploy-pr' label to this PR,"
+		echo "or to add you to the trusted user list."
 		exit 0
 	fi
 
